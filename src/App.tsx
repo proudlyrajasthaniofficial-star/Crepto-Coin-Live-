@@ -12,35 +12,46 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCoinId, setSelectedCoinId] = useState<string | null>(null);
-  const [usdToInr, setUsdToInr] = useState<number>(0);
+  const [usdToInr, setUsdToInr] = useState<number>(83.5); // Default fallback
 
   const { scrollYProgress } = useScroll();
   const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
   const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
 
   useEffect(() => {
+    let isMounted = true;
     async function loadData() {
       try {
         const [coinData, rateData] = await Promise.all([
           fetchTopCoins(25),
           fetchExchangeRates()
         ]);
-        setCoins(coinData);
+        if (!isMounted) return;
+        
+        if (coinData && Array.isArray(coinData) && coinData.length > 0) {
+          setCoins(coinData);
+        }
+        
         if (rateData && rateData.inr && rateData.usd) {
-          // Rate is units per BTC. So (INR/BTC) / (USD/BTC) = INR/USD
           const rate = rateData.inr.value / rateData.usd.value;
-          setUsdToInr(rate);
+          setUsdToInr(rate || 83.5);
         }
       } catch (err) {
-        setError('Failed to fetch real-time market data.');
+        if (isMounted) {
+          console.error('Data loading error:', err);
+          setError('Synchronizing market states...');
+          // Don't show critical error if we have old data or mock
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     }
     loadData();
-    // Refresh every 60 seconds
     const interval = setInterval(loadData, 60000);
-    return () => clearInterval(interval);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const handleCoinClick = (coin: CoinData) => {
@@ -62,32 +73,32 @@ export default function App() {
       </AnimatePresence>
 
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 px-6 py-8 flex justify-between items-center bg-gradient-to-b from-premium-black to-transparent">
+      <nav className="fixed top-0 w-full z-50 px-4 md:px-6 py-4 md:py-8 flex justify-between items-center bg-gradient-to-b from-premium-black to-transparent">
         <div className="flex items-center gap-2">
-          <Zap className="text-neon-blue w-8 h-8 fill-neon-blue" />
-          <span className="font-display font-extrabold text-2xl tracking-tighter">ETHERIA</span>
+          <Zap className="text-neon-blue w-6 h-6 md:w-8 md:h-8 fill-neon-blue" />
+          <span className="font-display font-extrabold text-xl md:text-2xl tracking-tighter">ETHERIA</span>
         </div>
-        <div className="flex gap-8 text-xs font-bold uppercase tracking-widest text-white/50">
+        <div className="hidden md:flex gap-8 text-xs font-bold uppercase tracking-widest text-white/50">
           <a href="#" className="hover:text-neon-blue transition-colors">Markets</a>
           <a href="#" className="hover:text-neon-purple transition-colors">Trade</a>
           <a href="#" className="hover:text-neon-pink transition-colors">Analytics</a>
         </div>
-        <button className="glass-morphism px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-white hover:text-black transition-all">
-          Connect Wallet
+        <button className="glass-morphism px-4 md:px-6 py-2 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-white hover:text-black transition-all">
+          Connect <span className="hidden sm:inline">Wallet</span>
         </button>
       </nav>
 
       {/* Hero Section */}
-      <header className="relative h-screen flex flex-col items-center justify-center pt-20 px-4 overflow-hidden">
+      <header className="relative min-h-screen flex flex-col items-center justify-center pt-24 md:pt-20 px-4 overflow-hidden">
         <motion.div 
           style={{ opacity: heroOpacity, scale: heroScale }}
-          className="text-center space-y-8 z-10"
+          className="text-center space-y-6 md:space-y-8 z-10 w-full max-w-4xl"
         >
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="inline-block glass-morphism px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] text-neon-blue mb-4"
+            className="inline-block glass-morphism px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] text-neon-blue mb-2"
           >
             Live Market Insights 2.0
           </motion.div>
@@ -96,9 +107,9 @@ export default function App() {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.1 }}
-            className="font-display text-7xl md:text-9xl font-black tracking-tighter leading-[0.85] text-white"
+            className="font-display text-5xl sm:text-7xl md:text-9xl font-black tracking-tighter leading-[1] md:leading-[0.85] text-white"
           >
-            FUTURE OF <br /> 
+            FUTURE OF <br className="hidden sm:block" /> 
             <span className="text-gradient">DIGITAL ASSETS</span>
           </motion.h1>
 
@@ -106,7 +117,7 @@ export default function App() {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="max-w-2xl mx-auto text-white/40 font-medium text-lg md:text-xl leading-relaxed"
+            className="max-w-2xl mx-auto text-white/40 font-medium text-base md:text-xl leading-relaxed px-4"
           >
             Experience lightning-fast analytics with high-fidelity visualization. 
             Track real-time fluctuations, historical peaks, and market domination.
@@ -125,19 +136,19 @@ export default function App() {
       </header>
 
       {/* Market List Section */}
-      <main className="max-w-7xl mx-auto px-6 pb-40">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-24 gap-8">
-          <div className="space-y-4">
-            <h2 className="font-display text-5xl font-bold">Real-time <br /> Performance</h2>
-            <div className="h-1 w-24 bg-gradient-to-r from-neon-blue to-neon-purple rounded-full" />
+      <main className="max-w-7xl mx-auto px-4 md:px-6 pb-40">
+        <div className="flex flex-col sm:flex-row justify-between items-center sm:items-end mb-16 md:mb-24 gap-8 text-center sm:text-left">
+          <div className="space-y-2 md:space-y-4">
+            <h2 className="font-display text-4xl md:text-5xl font-bold">Real-time <br className="hidden sm:block" /> Performance</h2>
+            <div className="h-1 w-20 md:w-24 bg-gradient-to-r from-neon-blue to-neon-purple rounded-full mx-auto sm:mx-0" />
           </div>
-          <div className="flex gap-12 font-mono text-sm">
+          <div className="flex flex-wrap justify-center sm:justify-end gap-6 md:gap-12 font-mono text-xs md:text-sm">
             <div className="text-white/40">
               <span className="block font-bold text-white mb-1">{coins.length}</span>
               Tracked
             </div>
             <div className="text-white/40">
-              <p className="font-bold text-white mb-1">
+              <p className="font-bold text-white mb-1 truncate max-w-[120px] md:max-w-none">
                 ${coins.reduce((acc, c) => acc + c.market_cap, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </p>
               {usdToInr > 0 && (
@@ -159,7 +170,7 @@ export default function App() {
             <Loader2 className="animate-spin text-neon-blue" size={48} />
             <p className="font-mono text-xs uppercase tracking-[0.2em] text-white/40">Synchronizing nodes...</p>
           </div>
-        ) : error ? (
+        ) : error && coins.length === 0 ? (
           <div className="text-center py-40 glass-morphism rounded-3xl">
             <p className="text-pink-500 font-bold">{error}</p>
             <button 

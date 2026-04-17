@@ -25,10 +25,13 @@ export async function fetchTopCoins(limit: number = 20): Promise<CoinData[]> {
 export async function fetchCoinDetail(id: string): Promise<CoinDetail | null> {
   try {
     const response = await fetch(`${API_BASE}/coins/${id}`);
-    if (!response.ok) throw new Error('Detail fetch failed');
+    if (!response.ok) {
+      console.warn(`[Frontend] Detail fetch failed: ${response.status}`);
+      return null;
+    }
     return await response.json();
   } catch (error) {
-    console.error('Error fetching coin detail:', error);
+    console.error('Error in fetchCoinDetail:', error);
     return null;
   }
 }

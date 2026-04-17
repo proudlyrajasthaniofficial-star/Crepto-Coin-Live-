@@ -37,7 +37,7 @@ const CoinListItem: React.FC<CoinListItemProps> = ({ coin, onClick, usdToInr }) 
       className="relative group mb-12 cursor-pointer"
       onClick={() => onClick(coin)}
     >
-      <div className="glass-morphism rounded-2xl p-6 transition-all duration-500 hover:ring-2 hover:ring-neon-blue/50 flex flex-col md:flex-row items-center gap-8 overflow-hidden">
+      <div className="glass-morphism rounded-2xl p-4 md:p-6 transition-all duration-500 hover:ring-2 hover:ring-neon-blue/50 flex flex-col md:flex-row items-center md:items-start lg:items-center gap-6 md:gap-8 overflow-hidden">
         {/* Glowing layer */}
         <motion.div 
           className="absolute inset-0 bg-gradient-to-r from-neon-blue/20 to-neon-purple/20 pointer-events-none"
@@ -45,8 +45,8 @@ const CoinListItem: React.FC<CoinListItemProps> = ({ coin, onClick, usdToInr }) 
         />
 
         {/* Rank & Logo */}
-        <div className="flex items-center gap-6 z-10">
-          <span className="font-display text-4xl font-extrabold opacity-20 text-white/50">
+        <div className="flex items-center gap-4 md:gap-6 z-10 w-full md:w-auto justify-between md:justify-start">
+          <span className="font-display text-2xl md:text-4xl font-extrabold opacity-20 text-white/50">
             {String(coin.market_cap_rank).padStart(2, '0')}
           </span>
           <div className="relative">
@@ -54,7 +54,7 @@ const CoinListItem: React.FC<CoinListItemProps> = ({ coin, onClick, usdToInr }) 
               src={coin.image || undefined} 
               alt={coin.name} 
               referrerPolicy="no-referrer"
-              className="w-20 h-20 rounded-full"
+              className="w-14 h-14 md:w-20 md:h-20 rounded-full"
               whileHover={{ rotate: 360, scale: 1.1 }}
               transition={{ duration: 0.8, type: "spring" }}
             />
@@ -63,21 +63,21 @@ const CoinListItem: React.FC<CoinListItemProps> = ({ coin, onClick, usdToInr }) 
         </div>
 
         {/* Info Section - This "transitions" as we scroll via the parent motion.div */}
-        <div className="flex-1 z-10 space-y-2">
-          <div className="flex items-baseline gap-3">
-            <h3 className="font-display text-3xl font-bold tracking-tight">{coin.name}</h3>
-            <span className="text-neon-blue font-mono font-medium text-lg uppercase">{coin.symbol}</span>
+        <div className="flex-1 z-10 space-y-4 md:space-y-2 w-full text-center md:text-left">
+          <div className="flex flex-col md:flex-row md:items-baseline gap-1 md:gap-3">
+            <h3 className="font-display text-2xl md:text-3xl font-bold tracking-tight">{coin.name}</h3>
+            <span className="text-neon-blue font-mono font-medium text-base md:text-lg uppercase">{coin.symbol}</span>
           </div>
           
-          <div className="flex flex-wrap gap-6 text-sm">
+          <div className="flex flex-wrap justify-center md:justify-start gap-4 md:gap-6 text-sm">
             <div className="space-y-1">
               <p className="text-white/40 uppercase tracking-widest text-[10px] font-bold">Current Price</p>
               <div className="flex flex-col">
-                <p className="text-2xl font-mono text-white leading-none">
+                <p className="text-xl md:text-2xl font-mono text-white leading-none">
                   ${coin.current_price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </p>
                 {usdToInr && usdToInr > 0 && (
-                  <p className="text-sm font-mono text-neon-blue mt-1 opacity-80">
+                  <p className="text-[10px] md:text-sm font-mono text-neon-blue mt-1 opacity-80">
                     ₹{(coin.current_price * usdToInr).toLocaleString(undefined, { maximumFractionDigits: 2 })}
                   </p>
                 )}
@@ -86,19 +86,19 @@ const CoinListItem: React.FC<CoinListItemProps> = ({ coin, onClick, usdToInr }) 
             
             <div className="space-y-1">
               <p className="text-white/40 uppercase tracking-widest text-[10px] font-bold">24h Change</p>
-              <p className={`text-2xl font-mono ${isPositive ? 'text-green-400' : 'text-pink-500'}`}>
+              <p className={`text-xl md:text-2xl font-mono ${isPositive ? 'text-green-400' : 'text-pink-500'}`}>
                 {isPositive ? '+' : ''}{coin.price_change_percentage_24h.toFixed(2)}%
               </p>
             </div>
 
-            <div className="space-y-1 hidden lg:block">
+            <div className="space-y-1 hidden md:block">
               <p className="text-white/40 uppercase tracking-widest text-[10px] font-bold">All Time High</p>
               <p className="text-sm font-mono text-green-400">
                 ${coin.ath.toLocaleString()}
               </p>
             </div>
 
-            <div className="space-y-1 hidden lg:block">
+            <div className="space-y-1 hidden md:block">
               <p className="text-white/40 uppercase tracking-widest text-[10px] font-bold">All Time Low</p>
               <p className="text-sm font-mono text-pink-500">
                 ${coin.atl.toLocaleString()}

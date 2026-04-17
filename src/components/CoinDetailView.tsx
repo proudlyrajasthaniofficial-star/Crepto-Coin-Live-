@@ -19,24 +19,29 @@ export default function CoinDetailView({ coinId, onClose, usdToInr }: CoinDetail
 
   useEffect(() => {
     if (!coinId) return;
+    let isMounted = true;
 
     async function loadDetail() {
       setLoading(true);
       setShowContent(false);
-      const [detailData, chartData] = await Promise.all([
+      const [detailData, chartResults] = await Promise.all([
         fetchCoinDetail(coinId!),
         fetchCoinChart(coinId!, '365')
       ]);
+
+      if (!isMounted) return;
+      
       setDetail(detailData);
-      setChartData(chartData);
+      setChartData(chartResults);
       
       // Animation timing: logo stays for a bit, then content slides up
       setTimeout(() => {
-        setShowContent(true);
+        if (isMounted) setShowContent(true);
       }, 1500);
       setLoading(false);
     }
     loadDetail();
+    return () => { isMounted = false; };
   }, [coinId]);
 
   const stats = useMemo(() => {
@@ -65,6 +70,18 @@ export default function CoinDetailView({ coinId, onClose, usdToInr }: CoinDetail
 
   if (!coinId) return null;
 
+  if (!loading && !detail) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-premium-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center">
+        <h3 className="text-2xl font-bold mb-4">Core Synchronizing...</h3>
+        <p className="text-white/40 mb-8 max-w-md">We're experiencing temporary synchronization issues with this asset's core data hub.</p>
+        <button onClick={onClose} className="glass-morphism px-8 py-3 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-white hover:text-black transition-all">
+          Return to Hub
+        </button>
+      </div>
+    );
+  }
+
   return (
     <AnimatePresence>
       <motion.div
@@ -79,7 +96,7 @@ export default function CoinDetailView({ coinId, onClose, usdToInr }: CoinDetail
             initial={{ scale: 0.5, opacity: 0, y: 50 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 1.5, opacity: 0, y: -100 }}
-            className="flex flex-col items-center gap-8"
+            className="flex flex-col items-center gap-6 md:gap-8 px-4"
           >
             <motion.div
               animate={{ y: [0, -20, 0] }}
@@ -90,7 +107,7 @@ export default function CoinDetailView({ coinId, onClose, usdToInr }: CoinDetail
                 src={detail?.image?.large || undefined} 
                 alt="coin-logo" 
                 referrerPolicy="no-referrer"
-                className="w-48 h-48 rounded-full"
+                className="w-32 h-32 md:w-48 md:h-48 rounded-full"
               />
               <div className="absolute -inset-8 bg-neon-blue/20 blur-3xl rounded-full -z-10 animate-pulse" />
             </motion.div>
@@ -98,7 +115,7 @@ export default function CoinDetailView({ coinId, onClose, usdToInr }: CoinDetail
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="text-6xl font-display font-black tracking-tighter text-gradient"
+              className="text-4xl md:text-6xl font-display font-black tracking-tighter text-gradient text-center"
             >
               {detail?.name || 'Loading Core...'}
             </motion.h2>
@@ -108,55 +125,55 @@ export default function CoinDetailView({ coinId, onClose, usdToInr }: CoinDetail
           <motion.div
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full h-full p-6 md:p-12 max-w-7xl mx-auto space-y-12"
+            className="w-full h-full p-4 md:p-12 max-w-7xl mx-auto space-y-8 md:space-y-12"
           >
             {/* Header */}
-            <header className="flex justify-between items-start">
-              <div className="flex items-center gap-6">
+            <header className="flex flex-col sm:flex-row justify-between items-center sm:items-start gap-6">
+              <div className="flex flex-col sm:flex-row items-center gap-4 md:gap-6 text-center sm:text-left">
                 <motion.img 
                   animate={{ y: [0, -10, 0] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                   src={detail?.image?.small || undefined} 
                   referrerPolicy="no-referrer"
-                  className="w-16 h-16 rounded-full" 
+                  className="w-12 h-12 md:w-16 md:h-16 rounded-full" 
                 />
                 <div>
-                  <h1 className="text-5xl font-display font-black tracking-tighter flex items-center gap-4">
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-black tracking-tighter flex flex-col sm:flex-row items-center gap-1 sm:gap-4">
                     {detail?.name}
-                    <span className="text-neon-blue font-mono text-xl opacity-50">{detail?.symbol.toUpperCase()}</span>
+                    <span className="text-neon-blue font-mono text-sm md:text-xl opacity-50 uppercase">{detail?.symbol}</span>
                   </h1>
-                  <p className="text-white/40 font-mono text-sm">Market Rank #{detail?.market_cap_rank}</p>
+                  <p className="text-white/40 font-mono text-[10px] md:text-sm">Market Rank #{detail?.market_cap_rank}</p>
                 </div>
               </div>
               <button 
                 onClick={onClose}
-                className="glass-morphism h-12 w-12 rounded-full flex items-center justify-center hover:bg-white hover:text-black transition-all"
+                className="glass-morphism h-10 w-10 md:h-12 md:w-12 rounded-full flex items-center justify-center hover:bg-white hover:text-black transition-all order-first sm:order-last self-end sm:self-auto"
               >
-                <X size={24} />
+                <X size={20} />
               </button>
             </header>
 
             {/* Main Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
               {/* Chart Section */}
-              <div className="lg:col-span-2 glass-morphism rounded-3xl p-8 space-y-6">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-display text-2xl font-bold flex items-center gap-2">
-                    <Activity className="text-neon-blue" />
-                    Market Performance (Yearly)
+              <div className="lg:col-span-2 glass-morphism rounded-3xl p-4 md:p-8 space-y-6">
+                <div className="flex flex-col sm:flex-row justify-between items-center sm:items-end gap-4">
+                  <h3 className="font-display text-lg md:text-2xl font-bold flex items-center gap-2">
+                    <Activity className="text-neon-blue w-5 h-5 md:w-6 md:h-6" />
+                    Performance (1Y)
                   </h3>
-                  <div className="text-right">
-                    <p className="text-white/40 text-xs font-bold uppercase tracking-widest">Current Valuation</p>
-                    <p className="text-3xl font-mono">${detail?.market_data.current_price.usd.toLocaleString()}</p>
+                  <div className="text-center sm:text-right">
+                    <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest">Current Valuation</p>
+                    <p className="text-xl md:text-3xl font-mono">${detail?.market_data.current_price.usd.toLocaleString()}</p>
                     {usdToInr && usdToInr > 0 && detail && (
-                      <p className="text-sm font-mono text-neon-blue">
+                      <p className="text-xs md:text-sm font-mono text-neon-blue">
                         ₹{(detail.market_data.current_price.usd * usdToInr).toLocaleString()}
                       </p>
                     )}
                   </div>
                 </div>
                 
-                <div className="h-[400px] w-full mt-8">
+                <div className="h-[250px] sm:h-[300px] md:h-[400px] w-full mt-4 md:mt-8">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={formattedChartData}>
                       <defs>
